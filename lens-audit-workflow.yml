@@ -1,0 +1,108 @@
+name: 🔬 LENS Visual Audit
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+concurrency:
+  group: lens-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lens-audit:
+    name: Run LENS Audit Pipeline
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🌐 Start Dev Server
+        run: |
+          python3 -m http.server 8080 &
+          echo "Server PID: $!"
+          npx wait-on http://localhost:8080 --timeout 30000
+
+      - name: 📸 Capture Baseline (if missing)
+        run: |
+          if [ ! -f "baseline.png" ]; then
+            echo "No baseline found — capturing golden baseline..."
+            npm run capture:baseline
+          else
+            echo "Baseline exists — skipping capture."
+          fi
+
+      - name: 🔍 Execute LENS Audit Loop
+        id: lens_audit
+        run: npm run audit
+        continue-on-error: true
+
+      - name: 🔧 Attempt Autonomous Remediation
+        if: steps.lens_audit.outcome == 'failure'
+        id: lens_remediate
+        run: npm run remediate
+        continue-on-error: true
+
+      - name: 💾 Commit Autonomous Repair
+        if: steps.lens_remediate.outcome == 'success'
+        run: |
+          git config --local user.email "lens-bot@autonomous.repair"
+          git config --local user.name "LENS Autonomous Repair Bot"
+          git add styles.css
+          git diff --staged --quiet || git commit -m "AUTONOMOUS REPAIR: Resolved style drift via Design Contract enforcement"
+          git push
+
+      - name: 📊 Upload Audit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lens-audit-report-${{ github.run_number }}
+          path: |
+            audit_report.md
+            current.png
+            diff.png
+          retention-days: 30
+
+      - name: 💬 Comment PR with Audit Results
+        if: github.event_name == 'pull_request' && steps.lens_audit.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = '## 🔬 LENS Audit Report\n\n';
+            try {
+              report += fs.readFileSync('audit_report.md', 'utf8');
+            } catch {
+              report += '⚠️ Audit report could not be read. Check workflow artifacts.';
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: ❌ Fail if Unresolved Violations Remain
+        if: steps.lens_audit.outcome == 'failure' && steps.lens_remediate.outcome == 'failure'
+        run: |
+          echo "LENS detected violations that could not be auto-remediated."
+          echo "Review audit_report.md for details."
+          exit 1
