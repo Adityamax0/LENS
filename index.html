@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LENS - Layout Error Navigation System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon">🔍</div>
+                <h1 class="logo-text">LENS</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <span class="icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">🐛</span>
+                    Active Errors
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">✅</span>
+                    Resolved
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <h2>Overview Dashboard</h2>
+                <div class="header-actions" style="display:flex; gap: 1rem; align-items: center;">
+                    <button class="btn-primary login-button">Login</button>
+                    <div class="user-profile">
+                        <div class="avatar">👨‍💻</div>
+                        <span>Aditya</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <h3>Total Errors Detected</h3>
+                        <p class="stat-value" id="total-errors">0</p>
+                    </div>
+                    <div class="stat-icon error">⚠️</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <h3>Resolved Issues</h3>
+                        <p class="stat-value text-success" id="resolved-issues">0</p>
+                    </div>
+                    <div class="stat-icon success">🛡️</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <h3>System Health</h3>
+                        <p class="stat-value">98.5%</p>
+                    </div>
+                    <div class="stat-icon info">📈</div>
+                </div>
+            </section>
+
+            <section class="recent-errors">
+                <div class="section-header">
+                    <h3>Recent Visual Anomalies</h3>
+                    <button class="btn-primary" id="refresh-btn">Refresh Audit</button>
+                </div>
+                <div class="table-container">
+                    <table class="error-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Component</th>
+                                <th>Description</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
